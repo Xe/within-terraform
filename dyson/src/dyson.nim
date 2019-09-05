@@ -1,4 +1,5 @@
 import cligen, os, osproc, parsecfg, rdstdin, strformat, strtabs
+import dysonPkg/[hacks]
 
 type
   Config = object
@@ -9,8 +10,11 @@ type
 proc toMap(conf: Config): StringTableRef =
   result = newStringTable()
   result["DIGITALOCEAN_TOKEN"] = conf.doToken
+  result["TF_VAR_do_token"] = conf.doToken
   result["CLOUDFLARE_EMAIL"] = conf.cfEmail
+  result["TF_VAR_cf_email"] = conf.cfEmail
   result["CLOUDFLARE_TOKEN"] = conf.cfToken
+  result["TF_VAR_cf_token"] = conf.cfToken
   result["PATH"] = "PATH".getEnv
 
 proc load(fname: string): Config =
@@ -81,5 +85,13 @@ proc apply(configFname = defConfigFname, planFname = defPlanFname) =
   defer: planFname.removeFile
   runCommand "terraform", ["apply", planFname], cfg.toMap
 
+proc kube(args: seq[string]) =
+  ## run arbitrary kubectl commands
+  let
+    preamble = "--kubeconfig ./.kubeconfig"
+    cmd = fmt"""kubectl --kubeconfig ./.kubeconfig {args.join " "}"""
+  echo fmt"running {cmd}"
+  assert execCmd(cmd) == 0
+
 when isMainModule:
-  dispatchMulti [apply], [destroy], [init], [plan]
+  dispatchMulti [apply], [kube], [destroy], [init], [plan]

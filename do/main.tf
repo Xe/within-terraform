@@ -1,22 +1,23 @@
 provider "digitalocean" {}
 
 resource "digitalocean_ssh_key" "om" {
-  name       = "Cadey main SSH key"
+  name       = "om ssh key"
   public_key = "${file("/Users/Cadey/.ssh/id_ed25519.pub")}"
 }
 
-resource "digitalocean_droplet" "cipra" {
-  image  = "coreos-stable"
-  name   = "cipra-${terraform.workspace}"
-  region = "nyc3"
-  size   = "s-1vcpu-2gb"
-  ssh_keys = ["${digitalocean_ssh_key.om.fingerprint}"]
+resource "digitalocean_kubernetes_cluster" "main" {
+  name    = "kubermemes"
+  region  = "${var.region}"
+  version = "${var.kubernetes_version}"
+
+  node_pool {
+    name       = "worker-pool"
+    size       = "${var.node_size}"
+    node_count = 2
+  }
 }
 
-resource "digitalocean_project" "workspace" {
-  name        = "cipra-bakfu-${terraform.workspace}"
-  description = "lo cipra bakfu be zo ${terraform.workspace}"
-  purpose     = "Web Application"
-  environment = "Development"
-  resources   = ["${digitalocean_droplet.cipra.urn}"]
+resource "local_file" "kubeconfig" {
+  content  = "${digitalocean_kubernetes_cluster.main.kube_config.0.raw_config}"
+  filename = "${path.module}/.kubeconfig"
 }

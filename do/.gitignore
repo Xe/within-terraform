@@ -1,2 +1,5 @@
 tf.plan
 terraform.tfstate*
+.kubeconfig
+.kube
+.helm
