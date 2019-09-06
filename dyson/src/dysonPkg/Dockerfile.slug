@@ -1,0 +1,10 @@
+#? stdtmpl(subsChar = '%', metaChar = '#')
+# proc genDockerfile(slug: string): string =
+#  result = ""
+FROM heroku/heroku:18
+ADD %slug /app
+ENV PORT 5000
+ENV HOME /app
+ENV PATH $PATH:/app/bin
+WORKDIR /app
+CMD /app/bin/web

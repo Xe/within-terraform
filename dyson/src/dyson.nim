@@ -1,5 +1,8 @@
-import cligen, os, osproc, parsecfg, rdstdin, strformat, strtabs
+import cligen, os, osproc, parsecfg, rdstdin, strformat, strtabs, tempfile
 import dysonPkg/[hacks]
+
+include "dysonPkg/deployment_with_ingress.yaml"
+include "dysonPkg/Dockerfile.slug"
 
 type
   Config = object
@@ -75,6 +78,7 @@ proc plan(configFname = defConfigFname, planFname = defPlanFname) =
   runCommand "terraform", ["plan", "-out=" & planFname], cfg.toMap
 
 proc env(configFname = defConfigFname) =
+  ## dump envvars
   let cfg = configFname.load
   for key, val in cfg.toMap.pairs:
     echo fmt"export {key}='{val}'"
@@ -91,5 +95,19 @@ proc apply(configFname = defConfigFname, planFname = defPlanFname) =
   defer: planFname.removeFile
   runCommand "terraform", ["apply", planFname], cfg.toMap
 
+proc manifest(name, domain, dockerImage: string, containerPort, replicas: int, useProdLE: bool) =
+  ## generate a somewhat sane manifest for a kubernetes app based on the arguments.
+  echo genDeploymentWithIngress(name, domain, dockerImage, containerPort, replicas, useProdLE)
+
+proc slug2docker(slugUrl: string, imageName: string) =
+  ## converts a heroku/dokku slug to a docker image
+  let dir = tempfile.mkdtemp()
+  defer: removeDir(dir)
+  withDir dir:
+    assert execCmd(fmt"curl -o slug.tar.gz {slugUrl}") == 0
+    writeFile "Dockerfile", genDockerfile("slug.tar.gz")
+    assert execCmd(fmt"docker build -t {imageName} .") == 0
+    assert execCmd(fmt"docker push {imageName}") == 0
+
 when isMainModule:
-  dispatchMulti [apply], [destroy], [env], [init], [plan]
+  dispatchMulti [apply], [destroy], [env], [init], [manifest], [plan], [slug2docker]

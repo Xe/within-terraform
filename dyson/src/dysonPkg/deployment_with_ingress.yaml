@@ -1,0 +1,73 @@
+#? stdtmpl(subsChar = '$', metaChar = '#')
+# proc genDeploymentWithIngress(name, domain, dockerImage: string, containerPort, replicas: int, useProdLE: bool): string =
+#  result = ""
+apiVersion: v1
+kind: Service
+metadata:
+  name: $name
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: $domain
+    external-dns.alpha.kubernetes.io/ttl: "120" #optional
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: $containerPort
+  selector:
+    app: $name
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $name
+spec:
+  replicas: $replicas
+  selector:
+    matchLabels:
+      app: $name
+  template:
+    metadata:
+      labels:
+        app: $name
+    spec:
+      containers:
+      - name: $name-web
+        image: $dockerImage
+        ports:
+        - containerPort: $containerPort
+      imagePullSecrets:
+      - name: regcred
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: $name
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # if useProdLe:
+    certmanager.k8s.io/cluster-issuer: "letsencrypt-prod"
+    # else:
+    certmanager.k8s.io/cluster-issuer: "letsencrypt-staging"
+    # end if
+
+spec:
+  tls:
+  - hosts:
+    - $domain
+    # if useProdLe:
+    secretName: prod-certs-$name
+    # else:
+    secretName: staging-certs-$name
+    # end if
+  rules:
+  - host: $domain
+    http:
+      paths:
+      - backend:
+          serviceName: $name
+          servicePort: 80

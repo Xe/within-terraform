@@ -34,8 +34,15 @@ helm init --upgrade --service-account tiller --force-upgrade
 
 sleep 2
 
-helm install --name nginx stable/nginx-ingress --set controller.publishService.enabled=true --set rbac.create=true
-helm install stable/external-dns --name edns --set provider=cloudflare --set cloudflare.apiKey=$CLOUDFLARE_TOKEN --set cloudflare.email=$CLOUDFLARE_EMAIL --set rbac.create=true
+helm install --name nginx stable/nginx-ingress \
+     --set controller.publishService.enabled=true \
+     --set rbac.create=true
+helm install stable/external-dns --name edns \
+     --set provider=cloudflare \
+     --set cloudflare.apiKey=$CLOUDFLARE_TOKEN \
+     --set cloudflare.email=$CLOUDFLARE_EMAIL \
+     --set rbac.create=true \
+     --set cloudflare.proxied=false
 
 kubectl apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.10/deploy/manifests/00-crds.yaml
 kubectl create namespace cert-manager
@@ -44,6 +51,16 @@ helm install --namespace cert-manager jetstack/cert-manager
 
 sleep 2
 
+kubectl apply --namespace cert-manager -f- <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-creds
+data:
+  email: $(echo -n $CLOUDFLARE_EMAIL | base64 -w 0)
+  password: $(echo -n $CLOUDFLARE_TOKEN | base64 -w 0)
+EOF
+
 kubectl apply -f- <<EOF
 apiVersion: certmanager.k8s.io/v1alpha1
 kind: ClusterIssuer
@@ -51,19 +68,18 @@ metadata:
   name: letsencrypt-staging
 spec:
   acme:
-    # You must replace this email address with your own.
-    # Let's Encrypt will use this to contact you about expiring
-    # certificates, and issues related to your account.
     email: me@christine.website
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
-      # Secret resource used to store the account's private key.
       name: example-issuer-account-key
-    # Add a single challenge solver, HTTP01 using nginx
     solvers:
-    - http01:
-        ingress:
-          class: nginx
+    - dns01:
+        cloudflare:
+          email: $CLOUDFLARE_EMAIL
+          # A secretKeyRef to a cloudflare api key
+          apiKeySecretRef:
+            name: cloudflare-creds
+            key: password
 EOF
 
 kubectl apply -f- <<EOF
@@ -82,9 +98,16 @@ spec:
       name: letsencrypt-prod
     # Enable the HTTP-01 challenge provider
     solvers:
-    - http01:
-        ingress:
-          class: nginx
+    - dns01:
+        cloudflare:
+          email: $CLOUDFLARE_EMAIL
+          # A secretKeyRef to a cloudflare api key
+          apiKeySecretRef:
+            name: cloudflare-creds
+            key: password
 EOF
 
+kubectl create secret generic regcred \
+        --from-file=.dockerconfigjson=~/.docker/config.json \
+        --type=kubernetes.io/dockerconfigjson --namespace apps
 
