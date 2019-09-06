@@ -1,5 +1,5 @@
 #? stdtmpl(subsChar = '$', metaChar = '#')
-# proc genDeploymentWithIngress(name, domain, dockerImage: string, containerPort, replicas: int, useProdLE: bool): string =
+# proc genDeploymentWithIngress(name, domain, dockerImage: string, containerPort, replicas: int, useProdLE: bool, envvars: seq[Envvar] = @[]): string =
 #  result = ""
 apiVersion: v1
 kind: Service
@@ -36,6 +36,13 @@ spec:
       containers:
       - name: $name-web
         image: $dockerImage
+        # if envvars.len != 0:
+        env:
+        # for val in envvars:
+        - name: $val.name
+          value: $val.value
+        # end for
+        # end if
         ports:
         - containerPort: $containerPort
       imagePullSecrets:

@@ -11,4 +11,4 @@ bin           = @["dyson"]
 
 # Dependencies
 
-requires "nim >= 0.20.0", "cligen", "tempfile"
+requires "nim >= 0.20.0", "cligen", "tempfile", "dotenv"

@@ -9,6 +9,7 @@ type
     doToken: string
     cfEmail: string
     cfToken: string
+    secretsLoc: string
 
 proc toMap(conf: Config): StringTableRef =
   result = newStringTable()
@@ -26,12 +27,14 @@ proc load(fname: string): Config =
   result.doToken = dict.getSectionValue("DigitalOcean", "Token")
   result.cfEmail = dict.getSectionValue("Cloudflare", "Email")
   result.cfToken = dict.getSectionValue("Cloudflare", "Token")
+  result.secretsLoc = dict.getSectionValue("Secrets", "GitCheckout")
 
 proc save(conf: Config, fname: string) =
   var dict = newConfig()
   dict.setSectionKey "DigitalOcean", "Token", conf.doToken
   dict.setSectionKey "Cloudflare", "Email", conf.cfEmail
   dict.setSectionKey "Cloudflare", "Token", conf.cfToken
+  dict.setSectionKey "Secrets", "GitCheckout", conf.secretsLoc
   dict.writeConfig fname
 
 proc confirm(msg: string, want: string) =
@@ -59,36 +62,38 @@ proc runCommand(bin: string, args: openarray[string], env: StringTableRef) =
     quit exitCode
 
 const
-  defConfigFname = "dyson.ini"
-  defPlanFname = "tf.plan"
+  planFname = "tf.plan"
 
-proc destroy(configFname = defConfigFname) =
+let
+  configFname = getConfigDir() / "dyson" / "dyson.ini"
+
+proc destroy() =
   ## destroy resources managed by Terraform
   let cfg = configFname.load
   runCommand "terraform", ["destroy"], cfg.toMap
 
-proc init(configFname = defConfigFname) =
+proc init() =
   ## init Terraform
   let cfg = configFname.load
   runCommand "terraform", ["init"], cfg.toMap
 
-proc plan(configFname = defConfigFname, planFname = defPlanFname) =
+proc plan() =
   ## plan a future Terraform run
   let cfg = configFname.load
   runCommand "terraform", ["plan", "-out=" & planFname], cfg.toMap
 
-proc env(configFname = defConfigFname) =
+proc env() =
   ## dump envvars
   let cfg = configFname.load
   for key, val in cfg.toMap.pairs:
     echo fmt"export {key}='{val}'"
 
-proc apply(configFname = defConfigFname, planFname = defPlanFname) =
+proc apply() =
   ## apply Terraform code to production
   let cfg = configFname.load
 
   if not planFname.fileExists:
-    plan(configFname, planFname)
+    plan()
     confirm(
         "Please stop and take a moment to scroll up and confirm this plan. Only 'yes' will be accepted.",
         "yes")
@@ -97,7 +102,17 @@ proc apply(configFname = defConfigFname, planFname = defPlanFname) =
 
 proc manifest(name, domain, dockerImage: string, containerPort, replicas: int, useProdLE: bool) =
   ## generate a somewhat sane manifest for a kubernetes app based on the arguments.
-  echo genDeploymentWithIngress(name, domain, dockerImage, containerPort, replicas, useProdLE)
+  var
+    envvars = newseq[Envvar]()
+  let
+    cfg = configFname.load
+    secretsFname = cfg.secretsLoc / fmt"{name}.env"
+
+  if secretsFname.existsFile:
+    for keyval in secretsFname.loadFromFile:
+      envvars.add keyval
+
+  echo genDeploymentWithIngress(name, domain, dockerImage, containerPort, replicas, useProdLE, envvars)
 
 proc slug2docker(slugUrl: string, imageName: string) =
   ## converts a heroku/dokku slug to a docker image

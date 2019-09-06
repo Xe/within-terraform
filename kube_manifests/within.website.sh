@@ -1,9 +1,9 @@
 #!/bin/sh
 
 dyson manifest \
-      -n=withinwebsite \
-      -d=within.website \
+      --name=withinwebsite \
+      --domain=within.website \
       --dockerImage=xena/within.website:060920191632 \
-      -c=5000 \
-      -r=1 \
-      -u=true | kubectl apply -f-
+      --containerPort=5000 \
+      --replicas=1 \
+      --useProdLE=true | kubectl apply -f-

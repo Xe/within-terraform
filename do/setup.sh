@@ -30,14 +30,36 @@ dyson env > dyson.env
 source dyson.env
 rm dyson.env
 
-helm init --upgrade --service-account tiller --force-upgrade
+openssl genrsa -out ./ca.key.pem 4096
+openssl req -key ca.key.pem -new -x509 -days 7300 -sha256 -out ca.cert.pem -extensions v3_ca
+openssl genrsa -out ./tiller.key.pem 4096
+openssl genrsa -out ./helm.key.pem 4096
+openssl req -key tiller.key.pem -new -sha256 -out tiller.csr.pem
+openssl req -key helm.key.pem -new -sha256 -out helm.csr.pem
+openssl x509 -req -CA ca.cert.pem -CAkey ca.key.pem -CAcreateserial -in tiller.csr.pem -out tiller.cert.pem -days 365
+openssl x509 -req -CA ca.cert.pem -CAkey ca.key.pem -CAcreateserial -in helm.csr.pem -out helm.cert.pem  -days 365
+
+helm init \
+     --tiller-tls \
+     --tiller-tls-cert ./tiller.cert.pem \
+     --tiller-tls-key ./tiller.key.pem \
+     --tiller-tls-verify \
+     --tls-ca-cert ca.cert.pem \
+     --upgrade \
+     --service-account tiller \
+     --force-upgrade
 
 sleep 2
 
-helm install --name nginx stable/nginx-ingress \
+helm install stable/nginx-ingress \
+     --name nginx \
+     --tls \
      --set controller.publishService.enabled=true \
      --set rbac.create=true
-helm install stable/external-dns --name edns \
+
+helm install stable/external-dns \
+     --tls \
+     --name edns \
      --set provider=cloudflare \
      --set cloudflare.apiKey=$CLOUDFLARE_TOKEN \
      --set cloudflare.email=$CLOUDFLARE_EMAIL \
@@ -47,9 +69,11 @@ helm install stable/external-dns --name edns \
 kubectl apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.10/deploy/manifests/00-crds.yaml
 kubectl create namespace cert-manager
 helm repo add jetstack https://charts.jetstack.io
-helm install --namespace cert-manager jetstack/cert-manager
+helm install jetstack/cert-manager \
+     --namespace cert-manager \
+     --tls
 
-sleep 2
+sleep 10
 
 kubectl apply --namespace cert-manager -f- <<EOF
 apiVersion: v1

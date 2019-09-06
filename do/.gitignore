@@ -3,3 +3,5 @@ terraform.tfstate*
 .kubeconfig
 .kube
 .helm
+*.pem
+*.srl
