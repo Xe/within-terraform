@@ -5,6 +5,7 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/hostname: exanple.within.website
     external-dns.alpha.kubernetes.io/ttl: "120" #optional
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
 spec:
   type: ClusterIP
   ports:
@@ -34,7 +35,7 @@ spec:
         - containerPort: 8080
         env:
         - name: MESSAGE
-          value: Hello from the first deployment!
+          value: Henlo this are an exanple deployment
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -42,7 +43,12 @@ metadata:
   name: hello-kubernetes-ingress
   annotations:
     kubernetes.io/ingress.class: nginx
+    certmanager.k8s.io/issuer: "letsencrypt-prod"
 spec:
+  tls:
+  - hosts:
+    - exanple.within.website
+    secretName: prod-certs
   rules:
   - host: exanple.within.website
     http:

@@ -13,4 +13,11 @@ variable "node_size" {
   default = "s-1vcpu-2gb"
 }
 
+variable "cloudflare_zone" {
+  default = "within.website"
+}
+
+# Filled in by dyson
 variable "do_token" {}
+variable "cf_email" {}
+variable "cf_token" {}
