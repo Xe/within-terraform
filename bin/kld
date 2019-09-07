@@ -1,0 +1,5 @@
+#!/bin/sh
+
+[ -z "$1" ] && echo "kld <deployment-name> ..." && exit 2
+
+exec kubectl logs deployment/$*
