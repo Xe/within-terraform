@@ -3,7 +3,7 @@
 dyson manifest \
       --name=idp \
       --domain=idp.christine.website \
-      --dockerImage=docker.pkg.github.com/xe/x/h:v1.1.8 \
+      --dockerImage=xena/idp:031320190918 \
       --containerPort=5000 \
       --replicas=1 \
       --useProdLE=true | kubectl apply -f-
