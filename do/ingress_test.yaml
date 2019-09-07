@@ -19,7 +19,7 @@ kind: Deployment
 metadata:
   name: hello-kubernetes-first
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: hello-kubernetes-first

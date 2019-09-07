@@ -40,7 +40,7 @@ spec:
         env:
         # for val in envvars:
         - name: $val.name
-          value: $val.value
+          value: "$val.value"
         # end for
         # end if
         ports:
