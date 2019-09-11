@@ -10,7 +10,7 @@ bin           = @["dyson"]
 
 # Dependencies
 
-requires "nim >= 0.20.0", "cligen", "tempfile", "dotenv"
+requires "nim >= 0.20.0", "cligen", "tempdir", "dotenv"
 
 task package, "builds a tarball package":
   echo getCurrentDir()

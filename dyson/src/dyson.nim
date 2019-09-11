@@ -1,4 +1,4 @@
-import cligen, os, osproc, parsecfg, rdstdin, strformat, strtabs, tempfile
+import cligen, os, osproc, parsecfg, rdstdin, strformat, strtabs, tempdir
 import dysonPkg/[hacks]
 
 include "dysonPkg/deployment_with_ingress.yaml"
@@ -116,9 +116,7 @@ proc manifest(name, domain, dockerImage: string, containerPort, replicas: int, u
 
 proc slug2docker(slugUrl: string, imageName: string) =
   ## converts a heroku/dokku slug to a docker image
-  let dir = tempfile.mkdtemp()
-  defer: removeDir(dir)
-  withDir dir:
+  withTempDirectory(dir, "slug2docker"):
     assert execCmd(fmt"curl -o slug.tar.gz {slugUrl}") == 0
     writeFile "Dockerfile", genDockerfile("slug.tar.gz")
     assert execCmd(fmt"docker build -t {imageName} .") == 0
