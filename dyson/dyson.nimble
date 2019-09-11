@@ -17,8 +17,8 @@ task package, "builds a tarball package":
   mode = ScriptMode.Verbose
   exec "nimble build"
   let folderName = "dyson-" & buildOS & "-" & buildCPU & "-" & version
-  exec "rm -rf " & folderName
-  defer: exec "rm -rf " & folderName
+  rmDir folderName
+  defer: rmDir folderName
   mkDir folderName
   cpFile "../LICENSE", folderName & "/LICENSE"
   cpFile "./bin/dyson", folderName & "/dyson"
