@@ -5,3 +5,4 @@ terraform.tfstate*
 .helm
 *.pem
 *.srl
+gateway-password.txt

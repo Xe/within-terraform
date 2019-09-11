@@ -1,0 +1,14 @@
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: "nginx"    
+    certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+  tls:
+  - hosts:
+    - gw.within.website
+    secretName: openfaas-crt
+  hosts:
+  - host: gw.within.website
+    serviceName: gateway
+    servicePort: 8080
+    path: /

@@ -1,0 +1,10 @@
+faasnetes:
+  readinessProbe:
+    initialDelaySeconds: 0
+    timeoutSeconds: 1
+    periodSeconds: 1
+  livenessProbe:
+    initialDelaySeconds: 0
+    timeoutSeconds: 1
+    periodSeconds: 1
+  imagePullPolicy: "Always"

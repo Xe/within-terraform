@@ -37,11 +37,11 @@ spec:
         imagePullPolicy: Always
         env:
           - name: INSTALL_LOCK
-            value: "true"
+            value: "false"
           - name: APP_NAME
             value: "tulpa.dev: git in plurality"
           - name: SSH_DOMAIN
-            value: tulpa.dev
+            value: git.tulpa.dev
         volumeMounts:
           - mountPath: "/data"
             name: "data"
@@ -94,15 +94,17 @@ metadata:
   namespace: gitea
   labels:
     app: gitea-ssh
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: ssh.tulpa.dev
+    external-dns.alpha.kubernetes.io/ttl: "120" #optional
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
 spec:
   ports:
   - port: 22
     targetPort: 22
-    nodePort: 30022
     name: ssh
   selector:
     app: gitea
-  type: NodePort
 ---
 # Ingress is always suitable for HTTP usage,
 # we suggest using an proxy layer such as slb to send traffic to different ports.
