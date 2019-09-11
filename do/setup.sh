@@ -55,7 +55,8 @@ helm install stable/nginx-ingress \
      --name nginx \
      --tls \
      --set controller.publishService.enabled=true \
-     --set rbac.create=true
+     --set rbac.create=true \
+     --values nginx-values.yaml
 
 helm install stable/external-dns \
      --tls \
