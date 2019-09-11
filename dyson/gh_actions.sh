@@ -10,4 +10,4 @@ Token = ""
 [Secrets]
 GitCheckout = "/github/workspace/within-terraform-secret"' > $HOME/.config/dyson/dyson.ini
 
-dyson $*
+exec dyson $*
