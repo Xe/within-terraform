@@ -1,0 +1,3 @@
+#!/bin/sh
+
+kubectl get onionservices -o=custom-columns=NAME:.metadata.name,HOSTNAME:.status.hostname $*

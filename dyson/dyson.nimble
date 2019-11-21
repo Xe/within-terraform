@@ -25,3 +25,8 @@ task package, "builds a tarball package":
   exec "chmod 744 " & folderName & "/dyson"
   exec "tar czf " & folderName & ".tgz " & folderName
 
+task docker, "build & push docker image":
+  let imgName = "xena/dyson:" & version
+  exec "docker build -t " & imgName & " ."
+  exec "docker push " & imgName
+
