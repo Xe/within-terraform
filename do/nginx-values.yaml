@@ -1,3 +1,7 @@
 tcp:
   22: "gitea/gitea-ssh:22"
-
+controller:
+  config:
+    use-forwarded-headers: "true"
+    compute-full-forwarded-for: "true"
+    use-proxy-protocol: "true"
