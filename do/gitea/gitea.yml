@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
       - name: gitea
-        image: gitea/gitea:latest
+        image: xena/gitea:1.10.0
         imagePullPolicy: Always
         env:
           - name: INSTALL_LOCK
@@ -46,7 +46,7 @@ spec:
           - mountPath: "/data"
             name: "data"
         ports:
-          - containerPort: 22
+          - containerPort: 2222
             name: ssh
             protocol: TCP
           - containerPort: 3000
@@ -101,10 +101,12 @@ metadata:
 spec:
   ports:
   - port: 22
-    targetPort: 22
+    targetPort: 2222
+    protocol: TCP
     name: ssh
   selector:
     app: gitea
+  type: NodePort
 ---
 # Ingress is always suitable for HTTP usage,
 # we suggest using an proxy layer such as slb to send traffic to different ports.
