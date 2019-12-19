@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
       - name: gitea
-        image: xena/gitea:1.10.0
+        image: xena/gitea:1.10.1
         imagePullPolicy: Always
         env:
           - name: INSTALL_LOCK

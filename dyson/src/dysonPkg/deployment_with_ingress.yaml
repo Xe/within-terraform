@@ -36,6 +36,7 @@ spec:
       containers:
       - name: $name-web
         image: $dockerImage
+        imagePullPolicy: Always
         # if envvars.len != 0:
         env:
         # for val in envvars:

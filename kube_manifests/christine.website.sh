@@ -7,6 +7,7 @@ latest_commit=$(git ls-remote git://github.com/Xe/site \
 
 echo "deploying xena/christinewebsite:$latest_commit"
 
+kubens apps
 dyson manifest \
       --name=christinewebsite \
       --domain=christine.website \

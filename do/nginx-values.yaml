@@ -1,5 +1,6 @@
 tcp:
   22: "gitea/gitea-ssh:22"
+  6667: "ircd/ircd:6667"
 controller:
   config:
     use-forwarded-headers: "true"
